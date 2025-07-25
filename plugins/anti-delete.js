@@ -1,5 +1,5 @@
-const { cmd } = require('../command');
-const { getAnti, setAnti } = require('../data/antidel');
+const { cmd } = require('../lib/command');
+const { getAnti, setAnti } = require('../lib/antidel');
 
 cmd({
     pattern: "antidelete",
