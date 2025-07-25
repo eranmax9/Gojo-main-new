@@ -1,6 +1,6 @@
-const { cmd, commands } = require("../lib/command");
+const { cmd, commands } = require("../command");
 const yts = require("yt-search");
-const { ytmp3 } = require("@vreden/youtube_scraper");
+const { ytmp3 } = require("@bochilteam/scraper"); // Corrected
 
 cmd(
   {
@@ -10,111 +10,62 @@ cmd(
     category: "download",
     filename: __filename,
   },
-  async (
-    robin,
-    mek,
-    m,
-    {
-      from,
-      quoted,
-      body,
-      isCmd,
-      command,
-      args,
-      q,
-      isGroup,
-      sender,
-      senderNumber,
-      botNumber2,
-      botNumber,
-      pushname,
-      isMe,
-      isOwner,
-      groupMetadata,
-      groupName,
-      participants,
-      groupAdmins,
-      isBotAdmins,
-      isAdmins,
-      reply,
-    }
-  ) => {
+  async (robin, mek, m, context) => {
     try {
+      const { reply, q, from } = context;
+
       if (!q) return reply("*නමක් හරි ලින්ක් එකක් හරි දෙන්න* 🌚❤️");
 
-      // Search for the video
       const search = await yts(q);
-      if (!search.videos.length)
-        return reply("😓 Song not found. Try a different keyword.");
-
       const data = search.videos[0];
       const url = data.url;
 
-      // Validate song duration (limit: 30 minutes)
+      const desc = `
+*❤️ROBIN SONG DOWNLOADER❤️*
+👻 *title* : ${data.title}
+👻 *description* : ${data.description}
+👻 *time* : ${data.timestamp}
+👻 *ago* : ${data.ago}
+👻 *views* : ${data.views}
+👻 *url* : ${data.url}
+𝐌𝐚𝐝𝐞 𝐛𝐲 𝐒_𝐈_𝐇_𝐈_𝐋_𝐄_𝐋
+`;
+
+      await robin.sendMessage(from, { image: { url: data.thumbnail }, caption: desc }, { quoted: mek });
+
+      const quality = "128";
+      const songData = await ytmp3(url);
+
       let durationParts = data.timestamp.split(":").map(Number);
-      let totalSeconds =
-        durationParts.length === 3
-          ? durationParts[0] * 3600 + durationParts[1] * 60 + durationParts[2]
-          : durationParts[0] * 60 + durationParts[1];
+      let totalSeconds = 0;
+      if (durationParts.length === 3) {
+        totalSeconds = durationParts[0] * 3600 + durationParts[1] * 60 + durationParts[2];
+      } else if (durationParts.length === 2) {
+        totalSeconds = durationParts[0] * 60 + durationParts[1];
+      } else {
+        totalSeconds = durationParts[0];
+      }
 
       if (totalSeconds > 1800) {
         return reply("⏱️ Audio limit is 30 minutes");
       }
 
-      // Song metadata message
-      const desc = `
-🎧 *${data.title}*
+      await robin.sendMessage(from, {
+        audio: { url: songData.download.url },
+        mimetype: "audio/mpeg",
+      }, { quoted: mek });
 
-📝 *Description:* ${data.description || "No description"}
-⏱️ *Duration:* ${data.timestamp}
-📅 *Uploaded:* ${data.ago}
-👀 *Views:* ${data.views.toLocaleString()}
-🔗 *URL:* ${data.url}
+      await robin.sendMessage(from, {
+        document: { url: songData.download.url },
+        mimetype: "audio/mpeg",
+        fileName: `${data.title}.mp3`,
+        caption: "𝐌𝐚𝐝𝐞 𝐛𝐲 𝐒_𝐈_𝐇_𝐈_𝐋_𝐄_𝐋",
+      }, { quoted: mek });
 
-_Made with ❤️ by Sayura_
-      `;
-
-      // Send metadata + thumbnail
-      await robin.sendMessage(
-        from,
-        { image: { url: data.thumbnail }, caption: desc },
-        { quoted: mek }
-      );
-
-      // Download audio
-      const quality = "128";
-      const songData = await ytmp3(url, quality);
-
-      if (!songData?.download?.url) {
-        return reply("❌ Failed to fetch the download URL. Try again.");
-      }
-
-      // Send audio (as voice preview)
-      await robin.sendMessage(
-        from,
-        {
-          audio: { url: songData.download.url },
-          mimetype: "audio/mpeg",
-        },
-        { quoted: mek }
-      );
-
-      // Send audio as document
-      await robin.sendMessage(
-        from,
-        {
-          document: { url: songData.download.url },
-          mimetype: "audio/mpeg",
-          fileName: `${data.title}.mp3`,
-          caption: "📥 *Download complete!* - Sayura Bot",
-        },
-        { quoted: mek }
-      );
-
-      return reply("✅ *Thanks for using my bot!* 🌚❤️");
+      return reply("*Thanks for using my bot* 🌚❤️");
     } catch (e) {
-      console.error("SONG CMD ERROR:", e);
-      reply(`❌ Error: ${e.message || "Something went wrong"}`);
+      console.error(e);
+      reply(`❌ Error: ${e.message}`);
     }
   }
 );
