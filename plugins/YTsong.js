@@ -1,4 +1,4 @@
-const { cmd } = require("../command");
+const { cmd } = require("../lib/command");
 const yts = require("yt-search");
 const { exec } = require("child_process");
 const fs = require("fs");
