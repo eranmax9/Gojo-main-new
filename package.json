@@ -27,6 +27,7 @@
     "async-g-i-s":"^1.4.0",
     "axios":"^1.10.0",
     "btch-downloader":"^2.0.9",
+    "@bochilteam/scraper":"5.0.1",
     "caliph-api":"^1.0.0",
     "ytsr":"^3.8.4",
     "crypto":"latest",
